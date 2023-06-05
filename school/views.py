@@ -1,4 +1,4 @@
-from django.shortcuts import render,redirect,reverse
+from django.shortcuts import render,redirect,reverse,get_object_or_404
 from . import forms,models
 from django.db.models import Sum
 from django.contrib.auth.models import Group
@@ -6,6 +6,94 @@ from django.http import HttpResponseRedirect
 from django.contrib.auth.decorators import login_required,user_passes_test
 from django.conf import settings
 from django.core.mail import send_mail
+from .models import FrenchiseExtra
+from school import models
+from schoolmanagement import settings
+import razorpay
+from django.conf import settings
+from django.shortcuts import render, redirect
+from django.views.decorators.csrf import csrf_exempt
+from .models import Order
+# def initiate_payment(request, franchise_id):
+#     franchise = get_object_or_404(FrenchiseExtra, id=franchise_id)
+#     amount = 1000  # The amount you want to charge
+
+#     payment = franchise.initiate_payment(amount)
+
+#     return render(request, 'payment.html', {'franchise': franchise, 'payment': payment})
+
+# def payment_success(request):
+#     franchise_id = request.POST.get('franchise_id')
+#     payment_id = request.POST.get('razorpay_payment_id')
+
+#     franchise = get_object
+
+def create_order(request):
+    if request.method == 'POST':
+        amount = request.POST.get('amount')
+        name = request.POST.get('name')
+        email = request.POST.get('email')
+
+        client = razorpay.Client(auth=(settings.RAZORPAY_API_KEY, settings.RAZORPAY_API_SECRET))
+        response = client.order.create(dict(amount=int(amount) * 100, currency='INR'))
+
+        order = Order.objects.create(order_id=response['id'], amount=amount, name=name, email=email)
+        return HttpResponseRedirect('school/payment.html', order_id=order.id)
+
+    return render(request, 'school/create_order.html')
+
+def create_payment(request, order_id):
+    order = Order.objects.get(id=order_id)
+    if order.status == 'created':
+        client = razorpay.Client(auth=('rzp_test_aLwq1HTCozbuy9', 'k1RXb3PPUf8uXoOHBVSLR2ID'))
+        payment_data = {
+            'amount': int(order.amount) * 100,
+            'currency': 'INR',
+            'receipt': str(order.id),
+            'order_id': order.order_id,
+            'notes': {
+                'name': order.name,
+                'email': order.email,
+            }
+        }
+        response = client.Order.create_payment(payment_data)
+
+        return render(request, 'school/payment.html', {'order': order, 'response': response})
+
+    return redirect('school/order_details.html', order_id=order.id)
+
+@csrf_exempt
+def payment_callback(request):
+    if request.method == 'POST':
+        data = request.POST
+        try:
+            client = razorpay.Client(auth=(settings.RAZORPAY_API_KEY, settings.RAZORPAY_API_SECRET))
+            params_dict = {
+                'razorpay_order_id': data['razorpay_order_id'],
+                'razorpay_payment_id': data['razorpay_payment_id'],
+                'razorpay_signature': data['razorpay_signature']
+            }
+            client.utility.verify_payment_signature(params_dict)
+
+            order = Order.objects.get(order_id=data['razorpay_order_id'])
+            order.status = 'paid'
+            order.save()
+
+            return redirect('school/order_details.html', order_id=order.id)
+
+        except Exception as e:
+            print(str(e))
+            return HttpResponseRedirect('school/payment_failed.html')
+
+    return redirect('school/payment_failed.html')
+
+def order_details(request, order_id):
+    order = Order.objects.get(id=order_id)
+    return render(request, 'school/order_details.html', {'order': order})
+
+def payment_failed(request):
+    return render(request, 'school/payment_failed.html')
+
 
 def home_view(request):
     if request.user.is_authenticated:
@@ -35,7 +123,10 @@ def studentclick_view(request):
     return render(request,'school/studentclick.html')
 
 
-
+def frenchiseclick_view(request):
+    if request.user.is_authenticated:
+        return HttpResponseRedirect('afterlogin')
+    return render(request,'school/frechiseclick.html')
 
 
 def admin_signup_view(request):
@@ -102,7 +193,26 @@ def teacher_signup_view(request):
 
 
 
+def frenchise_signup_view(request):
+    form1=forms.FrenchiseUserForm()
+    form2=forms.FrenchiseExtraForm()
+    mydict={'form1':form1,'form2':form2}
+    if request.method=='POST':
+        form1=forms.FrenchiseUserForm(request.POST)
+        form2=forms.FrenchiseExtraForm(request.POST)
+        if form1.is_valid() and form2.is_valid():
+            user=form1.save()
+            user.set_password(user.password)
+            user.save()
+            f2=form2.save(commit=False)
+            f2.user=user
+            user2=f2.save()
 
+            my_frenchise_group = Group.objects.get_or_create(name='FRENCHISE')
+            my_frenchise_group[0].user_set.add(user)
+
+        return HttpResponseRedirect('frenchiselogin')
+    return render(request,'school/frenchisesignup.html',context=mydict)
 
 
 #for checking user is techer , student or admin
@@ -112,6 +222,8 @@ def is_teacher(user):
     return user.groups.filter(name='TEACHER').exists()
 def is_student(user):
     return user.groups.filter(name='STUDENT').exists()
+def is_frenchise(user):
+    return user.groups.filter(name='FRENCHISE').exists()
 
 
 def afterlogin_view(request):
@@ -129,6 +241,12 @@ def afterlogin_view(request):
             return redirect('student-dashboard')
         else:
             return render(request,'school/student_wait_for_approval.html')
+    elif is_frenchise(request.user):
+        accountapproval=models.FrenchiseExtra.objects.all().filter(user_id=request.user.id,status=True)
+        if accountapproval:
+            return redirect('frenchise-dashboard')
+        else:
+            return render(request,'school/frenchise_wait_for_approval.html')
 
 
 
@@ -141,11 +259,17 @@ def admin_dashboard_view(request):
     teachercount=models.TeacherExtra.objects.all().filter(status=True).count()
     pendingteachercount=models.TeacherExtra.objects.all().filter(status=False).count()
 
+    frenchisecount=models.FrenchiseExtra.objects.all().filter(status=True).count()
+    pendingfrenchisecount=models.FrenchiseExtra.objects.all().filter(status=False).count()
+
     studentcount=models.StudentExtra.objects.all().filter(status=True).count()
     pendingstudentcount=models.StudentExtra.objects.all().filter(status=False).count()
 
     teachersalary=models.TeacherExtra.objects.filter(status=True).aggregate(Sum('salary'))
     pendingteachersalary=models.TeacherExtra.objects.filter(status=False).aggregate(Sum('salary'))
+
+    frenchisesalary=models.FrenchiseExtra.objects.filter(status=True).aggregate(Sum('salary'))
+    pendingfrenchisesalary=models.FrenchiseExtra.objects.filter(status=False).aggregate(Sum('salary'))
 
     studentfee=models.StudentExtra.objects.filter(status=True).aggregate(Sum('fee',default=0))
     pendingstudentfee=models.StudentExtra.objects.filter(status=False).aggregate(Sum('fee'))
@@ -160,8 +284,14 @@ def admin_dashboard_view(request):
         'studentcount':studentcount,
         'pendingstudentcount':pendingstudentcount,
 
+        'frenchisecount':frenchisecount,
+        'pendingfrenchisecount':pendingfrenchisecount,
+
         'teachersalary':teachersalary['salary__sum'],
         'pendingteachersalary':pendingteachersalary['salary__sum'],
+
+        'frenchisesalary':frenchisesalary['salary__sum'],
+        'pendingfrenchisesalary':pendingfrenchisesalary['salary__sum'],
 
         'studentfee':studentfee['fee__sum'],
         'pendingstudentfee':pendingstudentfee['fee__sum'],
@@ -180,13 +310,18 @@ def admin_dashboard_view(request):
 
 #for teacher sectionnnnnnnn by adminnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn
 
-@login_required(login_url='adminlogin')
-@user_passes_test(is_admin)
+@login_required(login_url='frenchiselogin')
+@user_passes_test(is_frenchise)
 def admin_teacher_view(request):
     return render(request,'school/admin_teacher.html')
 
 @login_required(login_url='adminlogin')
 @user_passes_test(is_admin)
+def admin_frenchise_view(request):
+    return render(request,'school/admin_frenchise.html')
+
+@login_required(login_url='frenchiselogin')
+@user_passes_test(is_frenchise)
 def admin_add_teacher_view(request):
     form1=forms.TeacherUserForm()
     form2=forms.TeacherExtraForm()
@@ -213,35 +348,87 @@ def admin_add_teacher_view(request):
 
 @login_required(login_url='adminlogin')
 @user_passes_test(is_admin)
+def admin_add_frenchise_view(request):
+    form1=forms.FrenchiseUserForm()
+    form2=forms.FrenchiseExtraForm()
+    mydict={'form1':form1,'form2':form2}
+    if request.method=='POST':
+        form1=forms.FrenchiseUserForm(request.POST)
+        form2=forms.FrenchiseExtraForm(request.POST)
+        if form1.is_valid() and form2.is_valid():
+            user=form1.save()
+            user.set_password(user.password)
+            user.save()
+
+            f2=form2.save(commit=False)
+            f2.user=user
+            f2.status=True
+            f2.save()
+
+            my_frenchise_group=Group.objects.get_or_create(name='FRENCHISE')
+            my_frenchise_group[0].user_set.add(user)
+        
+        return HttpResponseRedirect('admin-frenchise')
+    return render(request,'school/admin_add_frenchise.html',context=mydict)
+
+@login_required(login_url='frenchiselogin')
+@user_passes_test(is_frenchise)
 def admin_view_teacher_view(request):
     teachers=models.TeacherExtra.objects.all().filter(status=True)
     return render(request,'school/admin_view_teacher.html',{'teachers':teachers})
 
-
 @login_required(login_url='adminlogin')
 @user_passes_test(is_admin)
+def admin_view_frenchise_view(request):
+    frenchises=models.FrenchiseExtra.objects.all().filter(status=True)
+    return render(request,'school/admin_view_frenchise.html',{'frenchise':frenchises})
+
+@login_required(login_url='frenchiselogin')
+@user_passes_test(is_frenchise)
 def admin_approve_teacher_view(request):
     teachers=models.TeacherExtra.objects.all().filter(status=False)
     return render(request,'school/admin_approve_teacher.html',{'teachers':teachers})
 
-
 @login_required(login_url='adminlogin')
 @user_passes_test(is_admin)
+def admin_approve_frenchise_view(request):
+    frenchise=models.FrenchiseExtra.objects.all().filter(status=False)
+    return render(request,'school/admin_approve_frenchise.html',{'frenchise':frenchise})
+
+@login_required(login_url='frenchiselogin')
+@user_passes_test(is_frenchise)
 def approve_teacher_view(request,pk):
     teacher=models.TeacherExtra.objects.get(id=pk)
     teacher.status=True
     teacher.save()
     return redirect(reverse('admin-approve-teacher'))
 
-
 @login_required(login_url='adminlogin')
 @user_passes_test(is_admin)
+def approve_frenchise_view(request,pk):
+    frenchise=models.FrenchiseExtra.objects.get(id=pk)
+    frenchise.status=True
+    frenchise.save()
+    return redirect(reverse('admin-approve-frenchise'))
+
+
+@login_required(login_url='frenchiselogin')
+@user_passes_test(is_frenchise)
 def delete_teacher_view(request,pk):
     teacher=models.TeacherExtra.objects.get(id=pk)
     user=models.User.objects.get(id=teacher.user_id)
     user.delete()
     teacher.delete()
     return redirect('admin-approve-teacher')
+
+@login_required(login_url='frenchiselogin')
+@user_passes_test(is_frenchise)
+def delete_frenchise_view(request,pk):
+    frenchise=models.FrenchiseExtra.objects.get(id=pk)
+    user=models.User.objects.get(id=frenchise.user_id)
+    user.delete()
+    frenchise.delete()
+    return redirect('admin-approve-frenchise')
 
 
 @login_required(login_url='adminlogin')
@@ -253,9 +440,18 @@ def delete_teacher_from_school_view(request,pk):
     teacher.delete()
     return redirect('admin-view-teacher')
 
-
 @login_required(login_url='adminlogin')
 @user_passes_test(is_admin)
+def delete_frenchise_from_school_view(request,pk):
+    frenchise=models.FrenchiseExtra.objects.get(id=pk)
+    user=models.User.objects.get(id=frenchise.user_id)
+    user.delete()
+    frenchise.delete()
+    return redirect('admin-view-frenchise')
+
+
+@login_required(login_url='frenchiselogin')
+@user_passes_test(is_frenchise)
 def update_teacher_view(request,pk):
     teacher=models.TeacherExtra.objects.get(id=pk)
     user=models.User.objects.get(id=teacher.user_id)
@@ -278,28 +474,53 @@ def update_teacher_view(request,pk):
             return redirect('admin-view-teacher')
     return render(request,'school/admin_update_teacher.html',context=mydict)
 
-
 @login_required(login_url='adminlogin')
 @user_passes_test(is_admin)
+def update_frenchise_view(request,pk): 
+    frenchise=models.FrenchiseExtra.objects.get(id=pk)
+    user=models.User.objects.get(id=frenchise.user_id)
+
+    form1=forms.FrenchiseUserForm(instance=user)
+    form2=forms.FrenchiseExtraForm(instance=frenchise)
+    mydict={'form1':form1,'form2':form2}
+
+    if request.method=='POST':
+        form1=forms.FrenchiseUserForm(request.POST,instance=user)
+        form2=forms.FrenchiseExtraForm(request.POST,instance=frenchise)
+        print(form1)
+        if form1.is_valid() and form2.is_valid():
+            user=form1.save()
+            user.set_password(user.password)
+            user.save()
+            f2=form2.save(commit=False)
+            f2.status=True
+            f2.save()
+            return redirect('admin-view-frenchise')
+    return render(request,'school/admin_update_frenchise.html',context=mydict)
+
+@login_required(login_url='frenchiselogin')
+@user_passes_test(is_frenchise)
 def admin_view_teacher_salary_view(request):
     teachers=models.TeacherExtra.objects.all()
     return render(request,'school/admin_view_teacher_salary.html',{'teachers':teachers})
 
-
-
-
+@login_required(login_url='adminlogin')
+@user_passes_test(is_admin)
+def admin_view_frenchise_salary_view(request):
+    frenchises=models.FrenchiseExtra.objects.all()
+    return render(request,'school/admin_view_frenchise_salary.html',{'frenchises':frenchises})
 
 
 #for student by adminnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn
 
-@login_required(login_url='adminlogin')
-@user_passes_test(is_admin)
+@login_required(login_url='frenchiselogin')
+@user_passes_test(is_frenchise)
 def admin_student_view(request):
     return render(request,'school/admin_student.html')
 
 
-@login_required(login_url='adminlogin')
-@user_passes_test(is_admin)
+@login_required(login_url='frenchiselogin')
+@user_passes_test(is_frenchise)
 def admin_add_student_view(request):
     form1=forms.StudentUserForm()
     form2=forms.StudentExtraForm()
@@ -326,15 +547,15 @@ def admin_add_student_view(request):
     return render(request,'school/admin_add_student.html',context=mydict)
 
 
-@login_required(login_url='adminlogin')
-@user_passes_test(is_admin)
+@login_required(login_url='frenchiselogin')
+@user_passes_test(is_frenchise)
 def admin_view_student_view(request):
     students=models.StudentExtra.objects.all().filter(status=True)
     return render(request,'school/admin_view_student.html',{'students':students})
 
 
-@login_required(login_url='adminlogin')
-@user_passes_test(is_admin)
+@login_required(login_url='frenchiselogin')
+@user_passes_test(is_frenchise)
 def delete_student_from_school_view(request,pk):
     student=models.StudentExtra.objects.get(id=pk)
     user=models.User.objects.get(id=student.user_id)
@@ -343,8 +564,8 @@ def delete_student_from_school_view(request,pk):
     return redirect('admin-view-student')
 
 
-@login_required(login_url='adminlogin')
-@user_passes_test(is_admin)
+@login_required(login_url='frenchiselogin')
+@user_passes_test(is_frenchise)
 def delete_student_view(request,pk):
     student=models.StudentExtra.objects.get(id=pk)
     user=models.User.objects.get(id=student.user_id)
@@ -353,8 +574,8 @@ def delete_student_view(request,pk):
     return redirect('admin-approve-student')
 
 
-@login_required(login_url='adminlogin')
-@user_passes_test(is_admin)
+@login_required(login_url='frenchiselogin')
+@user_passes_test(is_frenchise)
 def update_student_view(request,pk):
     student=models.StudentExtra.objects.get(id=pk)
     user=models.User.objects.get(id=student.user_id)
@@ -377,15 +598,15 @@ def update_student_view(request,pk):
 
 
 
-@login_required(login_url='adminlogin')
-@user_passes_test(is_admin)
+@login_required(login_url='frenchiselogin')
+@user_passes_test(is_frenchise)
 def admin_approve_student_view(request):
     students=models.StudentExtra.objects.all().filter(status=False)
     return render(request,'school/admin_approve_student.html',{'students':students})
 
 
-@login_required(login_url='adminlogin')
-@user_passes_test(is_admin)
+@login_required(login_url='frenchiselogin')
+@user_passes_test(is_frenchise)
 def approve_student_view(request,pk):
     students=models.StudentExtra.objects.get(id=pk)
     students.status=True
@@ -393,8 +614,8 @@ def approve_student_view(request,pk):
     return redirect(reverse('admin-approve-student'))
 
 
-@login_required(login_url='adminlogin')
-@user_passes_test(is_admin)
+@login_required(login_url='frenchiselogin')
+@user_passes_test(is_frenchise)
 def admin_view_student_fee_view(request):
     students=models.StudentExtra.objects.all()
     return render(request,'school/admin_view_student_fee.html',{'students':students})
@@ -405,8 +626,8 @@ def admin_view_student_fee_view(request):
 
 
 #attendance related viewwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww
-@login_required(login_url='adminlogin')
-@user_passes_test(is_admin)
+@login_required(login_url='frenchiselogin')
+@user_passes_test(is_frenchise)
 def admin_attendance_view(request):
     return render(request,'school/admin_attendance.html')
 
@@ -461,14 +682,14 @@ def admin_view_attendance_view(request,cl):
 
 
 #fee related view by adminnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn
-@login_required(login_url='adminlogin')
-@user_passes_test(is_admin)
+@login_required(login_url='frenchiselogin')
+@user_passes_test(is_frenchise)
 def admin_fee_view(request):
     return render(request,'school/admin_fee.html')
 
 
-@login_required(login_url='adminlogin')
-@user_passes_test(is_admin)
+@login_required(login_url='frenchiselogin')
+@user_passes_test(is_frenchise)
 def admin_view_fee_view(request,cl):
     feedetails=models.StudentExtra.objects.all().filter(cl=cl)
     return render(request,'school/admin_view_fee.html',{'feedetails':feedetails,'cl':cl})
@@ -515,11 +736,30 @@ def teacher_dashboard_view(request):
     }
     return render(request,'school/teacher_dashboard.html',context=mydict)
 
+#frenchise dashboard
+@login_required(login_url='frenchiselogin')
+@user_passes_test(is_frenchise)
+def frenchise_dashboard_view(request):
+    frenchisedata=models.FrenchiseExtra.objects.all().filter(status=True,user_id=request.user.id)
+    notice=models.Notice.objects.all()
+    mydict={
+        'salary':frenchisedata[0].salary,
+        'mobile':frenchisedata[0].mobile,
+        'date':frenchisedata[0].joindate,
+        'notice':notice
+    }
+    return render(request,'school/frenchise_dashboard.html',context=mydict)
+
 
 
 @login_required(login_url='teacherlogin')
 @user_passes_test(is_teacher)
 def teacher_attendance_view(request):
+    return render(request,'school/teacher_attendance.html')
+
+@login_required(login_url='frenchiselogin')
+@user_passes_test(is_frenchise)
+def frenchise_attendance_view(request):
     return render(request,'school/teacher_attendance.html')
 
 
@@ -581,6 +821,20 @@ def teacher_notice_view(request):
     return render(request,'school/teacher_notice.html',{'form':form})
 
 
+@login_required(login_url='frenchiselogin')
+@user_passes_test(is_frenchise)
+def frenchise_notice_view(request):
+    form=forms.NoticeForm()
+    if request.method=='POST':
+        form=forms.NoticeForm(request.POST)
+        if form.is_valid():
+            form=form.save(commit=False)
+            form.by=request.user.first_name
+            form.save()
+            return redirect('frenchise-dashboard')
+        else:
+            print('form invalid')
+    return render(request,'school/frenchise_notice.html',{'form':form})
 
 
 

@@ -61,7 +61,7 @@
 
 
 
-  <!--- signup page for teacher by admin(sumit)  ---------->
+
   <form method="post">
     {% csrf_token %}
     <div class="container register-form">
@@ -73,27 +73,77 @@
         <div class="form-content">
           <div class="row">
             <div class="col-md-6">
+              <p style="text-align: left; margin-left:10px;">First Name</p>
               <div class="form-group">
-                {% render_field form1.first_name class="form-control" placeholder="First Name" %}
+                {% render_field form1.first_name class="form-control" placeholder="Name" %}
               </div>
+              <p style="text-align: left; margin-left:10px;">User Name</p>
               <div class="form-group">
                 {% render_field form1.username class="form-control" placeholder="Username" %}
               </div>
-              <div class="form-group">
-                {% render_field form2.mobile class="form-control" placeholder="Contact" %}
-              </div>
-
-            </div>
-            <div class="col-md-6">
-              <div class="form-group">
-                {% render_field form1.last_name class="form-control" placeholder="Last Name" %}
-              </div>
+              <p style="text-align: left; margin-left:10px;">Password</p>
               <div class="form-group">
                 {% render_field form1.password class="form-control" type="password" placeholder="Password" %}
               </div>
+              <p style="text-align: left; margin-left:10px;">Email</p>
               <div class="form-group">
-                {% render_field form2.salary class="form-control" placeholder="Salary ($)" %}
+                {% render_field form2.email class="form-control" type="password" placeholder="Email" %}
               </div>
+             
+              <p style="text-align: left; margin-left:10px;">Mobile Number</p>
+              <div class="form-group">
+                {% render_field form2.mobile class="form-control" placeholder="Mobile Number" %}
+              </div>
+              <p style="text-align: left; margin-left:10px;">Gender</p>
+                <div class="form-group">
+                {% render_field form2.g_choices class="form-control" placeholder="Gender" %}
+                </div>
+                <p style="text-align: left; margin-left:10px;">Present Address</p>
+                <div class="form-group">
+                {% render_field form2.present_address class="form-control" placeholder="Present Address" %}
+              </div>
+              <p style="text-align: left; margin-left:10px;">Permanent Address</p>
+              <div class="form-group">
+              {% render_field form2.permanent_address class="form-control" placeholder="Permanent Address" %}
+            </div>
+         
+            </div>
+            <div class="col-md-6">
+            
+            <p style="text-align: left; margin-left:10px;">Passport Photo</p>
+            <div class="form-group">
+            {% render_field form2.photo class="form-control" placeholder="Passport Photo" %}
+          </div>
+          <p style="text-align: left; margin-left:10px;">state</p>
+          <div class="form-group">
+          {% render_field form2.state class="form-control" placeholder="State" %}
+        </div>
+        <p style="text-align: left; margin-left:10px;">District</p>
+        <div class="form-group">
+        {% render_field form2.district class="form-control" placeholder="District" %}
+        </div>
+        <p style="text-align: left; margin-left:10px;">Pin Code</p>
+        <div class="form-group">
+        {% render_field form2.pin_code class="form-control" placeholder="Pin_code" %}
+      </div>
+      <p style="text-align: left; margin-left:10px;">Aadhar Number</p>
+      <div class="form-group">
+      {% render_field form2.aadhar class="form-control" placeholder="Aadhar" %}
+    </div>
+    <p style="text-align: left; margin-left:10px;">Degree Certificate</p>
+    <div class="form-group">
+    {% render_field form2.degree class="form-control" placeholder="Degree" %}
+  </div>
+    <p style="text-align: left; margin-left:10px;">Resume</p>
+     <div class="form-group">
+     {% render_field form2.resume class="form-control" placeholder="Resume" %}
+      </div>       
+      <p style="text-align: left; margin-left:10px;">Course</p>
+      <div class="form-group">
+      {% render_field form2.course class="form-control" placeholder="Course" %}
+       </div>
+            </div>
+              
 
             </div>
           </div>
@@ -102,15 +152,13 @@
         </div>
       </div>
     </div>
+    <br>
 
   </form>
 
 
 
 
-  <!--
-        written By : sumit kumar
-        -->
 
 
 

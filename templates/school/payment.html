@@ -1,0 +1,28 @@
+<!-- payment.html -->
+
+<h1>Payment Details</h1>
+<p>Order ID: {{ order.id }}</p>
+<p>Amount: {{ order.amount }}</p>
+<p>Name: {{ order.name }}</p>
+<p>Email: {{ order.email }}</p>
+
+<form method="POST" action="{% url 'payment_callback' %}">
+  {% csrf_token %}
+  <script src="https://checkout.razorpay.com/v1/checkout.js"
+          data-key="{{ response.key }}"
+          data-amount="{{ response.amount }}"
+          data-currency="{{ response.currency }}"
+          data-order_id="{{ response.id }}"
+          data-name="{{ order.name }}"
+          data-description="Payment for Order ID: {{ order.id }}"
+          data-image="{{ response.image }}"
+          data-prefill.name="{{ order.name }}"
+          data-prefill.email="{{ order.email }}"
+          data-notes.amount="{{ order.amount }}"
+          data-theme.color="#F37254">
+  </script>
+  <input type="hidden" value="{{ order.id }}" name="razorpay_order_id">
+  <input type="hidden" value="{{ response.id }}" name="razorpay_payment_id">
+  <input type="hidden" value="{{ response.signature }}" name="razorpay_signature">
+  <button type="submit">Complete Payment</button>
+</form>

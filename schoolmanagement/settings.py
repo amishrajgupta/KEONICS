@@ -27,12 +27,16 @@ SECRET_KEY = 'k0ujs9pcw+7qohwas!o7_ept20$c@$)-b=qco8sgviy_f)((bc'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['ecf1-2405-201-5c09-2acb-e59a-8dd6-9d44-a85e.ngrok-free.app','127.0.0.1']
 
 
 # Application definition
 
+RAZORPAY_API_KEY = 'rzp_test_aLwq1HTCozbuy9'
+RAZORPAY_API_SECRET = 'k1RXb3PPUf8uXoOHBVSLR2ID'
+
 INSTALLED_APPS = [
+    'jazzmin',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -41,8 +45,15 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'school',
     'widget_tweaks',
+    'tempus_dominus',
 ]
-
+JAZZMIN_SETTINGS = {
+    "site_title": "Your Admin Site",
+    "site_header": "Your Admin Site",
+    "show_sidebar": True,
+    "navigation_expanded": False,
+    # Additional Jazzmin settings
+}
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -58,7 +69,7 @@ ROOT_URLCONF = 'schoolmanagement.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [TEMPLATE_DIR,],
+        'DIRS': [TEMPLATE_DIR],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -144,3 +155,4 @@ EMAIL_HOST_PASSWORD = 'xyz' # host email password required
 # otherwise you will get SMTPAuthenticationError at /contactus
 # this process is required because google blocks apps authentication by default
 EMAIL_RECEIVING_USER = ['to@gmail.com'] # email on which you will receive messages sent from website
+

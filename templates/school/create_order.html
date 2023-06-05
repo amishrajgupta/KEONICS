@@ -1,0 +1,10 @@
+
+<form method="post" action="{% url 'create_order' %}">
+    {% csrf_token %}
+    <input type="text" name="amount" placeholder="Amount" required>
+    <input type="text" name="name" placeholder="Name" required>
+    <input type="email" name="email" placeholder="Email" required>
+    <button type="submit">Proceed to Payment</button>
+</form>
+
+  

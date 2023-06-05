@@ -9,8 +9,7 @@
   <style media="screen">
     .jumbotron {
       margin-top: 0px;
-      margin-bottom: 0px;
-      background-image: url('{% static "images/klogo.jpg" %}');
+      margin-bottom: 0px;      
       background-size: cover;
       background-repeat: no-repeat;
     }
@@ -34,6 +33,14 @@
       animation: glow 1s ease-in-out infinite alternate;
     }
 
+    .image{
+      width: 150px;
+      height: 75px;
+      display: block;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
     
   </style>
 
@@ -41,32 +48,17 @@
 
 <body>
   {% include "school/navbar.html" %}
-  <br>
-  <br>
   <div class="jumbotron" style="margin-bottom: 0px;margin-top: 0px;">
     <br>
-    <h1 class="display-4 glow"><b></b></h1>
+    <h1 class="display-4 glow"></h1>
 
-    <br><br>
+    
+    <img class="image" src="static/images/klogo.jpg" alt=""></img>
+    <br>
     <h1 class="text-center" style="color:red;">WELCOME TO KEONICS</h1>
-    <br><br><br><br><br>
-    <p class="lead">
-      <a class="btn btn-danger btn-lg" href="/studentsignup" role="button">Sign Up as Student</a>
-    </p>
-    <br><br>
   </div>
 
-  <br>
-  <br>
-  <br><br>
-
   {% include "school/admin_teacher_student_card.html" %}
-
-  <br><br>
-  <br>
-  <br>
-  <br>
-  <br>
   {% include "school/footer.html" %}
 </body>
 

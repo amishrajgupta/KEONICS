@@ -6,7 +6,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-  <title>SMS - Django</title>
+  <title>KEONICS - Django</title>
   <style type="text/css">
     body {
       color: #aa082e;
@@ -61,7 +61,7 @@
 
 
 
-  <!--- signup page for teacher by admin(sumit)  ---------->
+  
   <form method="post">
     {% csrf_token %}
     <div class="container register-form">
@@ -73,38 +73,171 @@
         <div class="form-content">
           <div class="row">
             <div class="col-md-6">
+              <p style="text-align: left; margin-left:10px;">First Name</p>
               <div class="form-group">
                 {% render_field form1.first_name class="form-control" placeholder="First Name" %}
               </div>
-              <div class="form-group">
-                {% render_field form1.username class="form-control" placeholder="Username" %}
-              </div>
-              <div class="form-group">
-                {% render_field form2.cl class="form-control" placeholder="Class" %}
-              </div>
-              <div class="form-group">
-                {% render_field form2.mobile class="form-control" placeholder="Contact" %}
-              </div>
-
-            </div>
-            <div class="col-md-6">
+              <p style="text-align: left; margin-left:10px;">Last Name</p>
               <div class="form-group">
                 {% render_field form1.last_name class="form-control" placeholder="Last Name" %}
               </div>
+              <p style="text-align: left; margin-left:10px;">Mobile</p>
+              <div class="form-group">
+                {% render_field form2.mobile class="form-control" placeholder="Contact" %}
+              </div>
+              <p style="text-align: left; margin-left:10px;">DOB</p>
+              <div class="form-group">
+                {% render_field form2.date_of_birth class="form-control" placeholder="Date of Birth" %}
+              </div>
+              <p style="text-align: left; margin-left:10px;">Passport Photo</p>
+              <div class="form-group">
+                {% render_field form2.photo class="form-control" placeholder="Photo" %}
+              </div>
+              <p style="text-align: left; margin-left:10px;">Username</p>
+              <div class="form-group">
+                {% render_field form1.username class="form-control" placeholder="Username" %}
+              </div>
+              <p style="text-align: left; margin-left:10px;">Password</p>
               <div class="form-group">
                 {% render_field form1.password class="form-control" type="password" placeholder="Password" %}
               </div>
+              
+              <p style="text-align: left; margin-left:10px;">Aadhar Number</p>
               <div class="form-group">
-                {% render_field form2.roll class="form-control" placeholder="Roll" %}
-              </div>
+                {% render_field form2.aadhaar class="form-control" placeholder="Adhaar No." %}
+              </div>  
+              <p style="text-align: left; margin-left:10px;">Gender</p>
               <div class="form-group">
-                {% render_field form2.fee class="form-control" placeholder="Fee" %}
+                {% render_field form2.g_choices class="form-control" placeholder="Gender" %}
               </div>
-
+              <p style="text-align: left; margin-left:10px;">Blood Group</p>
+              <div class="form-group">
+                {% render_field form2.bg_choices class="form-control" placeholder="Blood Group" %}
+              </div>
+              <p style="text-align: left; margin-left:10px;">Occupation</p>
+              <div class="form-group">
+                {% render_field form2.occupation class="form-control" placeholder="Occupation" %}
+              </div>
+              <p style="text-align: left; margin-left:10px;">Course</p>
+              <div class="form-group">
+                {% render_field form2.cl class="form-control" placeholder="Course" %}
+              </div>
+              <p style="text-align: left; margin-left:10px;">Father's Name</p>
+              <div class="form-group">
+                {% render_field form2.father_name class="form-control" placeholder="Father Name" %}
+              </div>
+              <p style="text-align: left; margin-left:10px;">Father's Occupation</p>
+              <div class="form-group">
+                {% render_field form2.father_occupation class="form-control" placeholder="Father Occupation" %}
+              </div> 
+              <p style="text-align: left; margin-left:10px;">Father's Mobile</p>
+              <div class="form-group">
+                {% render_field form2.father_mobile class="form-control" placeholder="Father Mobile" %}
+              </div>
             </div>
+            <div class="col-md-6">
+          
+              <p style="text-align: left; margin-left:10px;">State</p>
+              <div class="form-group">
+                {% render_field form2.state class="form-control" placeholder="State" %}
+              </div>
+              <p style="text-align: left; margin-left:10px;">District</p>
+              <div class="form-group">
+                {% render_field form2.district class="form-control" placeholder="District" %}
+              </div>
+              <p style="text-align: left; margin-left:10px;">Pin Code</p>
+              <div class="form-group">
+                {% render_field form2.pin class="form-control" placeholder="Pin Code" %}
+              </div>
+              <p style="text-align: left; margin-left:10px;">Category</p>
+              <div class="form-group">
+                {% render_field form2.category class="form-control" placeholder="Cateory" %}
+              </div>
+              <p style="text-align: left; margin-left:10px;">Permanent Address</p>
+              <div class="form-group">
+                {% render_field form2.permanent_address class="form-control" placeholder="Permanent Address" %}
+              </div>
+              <p style="text-align: left; margin-left:10px;">Aadhar Certificate</p>
+              <div class="form-row">
+                 <div class="col">
+                  {% render_field form2.aadhar class="form-control" placeholder="Aadhar_cert" %}
+                </div>
+                <div class="col">
+                  {% render_field form2.has_aadhar class="form-control" placeholder="Has_Aadhar" %}
+                </div>
+              </div>
+              <br>
+              <p style="text-align: left; margin-left:10px;">12th Marksheet</p>
+              <div class="form-row">
+                <div class="col">
+                  {% render_field form2.twel_marks class="form-control" placeholder="Twel_cert" %}
+                </div>
+                <div class="col">
+                  {% render_field form2.has_twel_marks class="form-control" placeholder="Has_Twel_marks" %}
+                </div>
+              </div>
+              <br>
+              <p style="text-align: left; margin-left:10px;">10th Marksheet</p>
+              <div class="form-row">
+                <div class="col">
+                  {% render_field form2.tenth_marks class="form-control" placeholder="Tenth_marks" %}
+                </div>
+                <div class="col">
+                  {% render_field form2.has_tenth_marks class="form-control" placeholder="Has_tenth_marks" %}
+                </div>
+              </div>
+              <br>
+              <p style="text-align: left; margin-left:10px;">Caste Certificate</p>
+              <div class="form-row">
+                <div class="col">
+                  {% render_field form2.caste class="form-control" placeholder="Caste_Cert" %}
+                </div>
+                <div class="col">
+                  {% render_field form2.has_caste class="form-control" placeholder="Has_caste" %}
+                </div>
+              </div>
+              <br>
+              <p style="text-align: left; margin-left:10px;">Income Certificate</p>
+              <div class="form-row">
+                <div class="col">
+                  {% render_field form2.income class="form-control" placeholder="Income_cert" %}
+                </div>
+                <div class="col">
+                  {% render_field form2.has_income class="form-control" placeholder="Has_income" %}
+                </div>
+              </div>
+              <br>
+              <p style="text-align: left; margin-left:10px;">Ration Certificate</p>
+              <div class="form-row">
+                <div class="col">
+                  {% render_field form2.ration class="form-control" placeholder="Ration_Cert" %}
+                </div>
+                <div class="col">
+                  {% render_field form2.has_ration class="form-control" placeholder="Has_ration" %}
+                </div>
+              </div>
+              <br>
+              <p style="text-align: left; margin-left:10px;">Others</p>
+              <div class="form-row">
+                <div class="col">
+                  {% render_field form2.others class="form-control" placeholder="Others" %}
+                </div>
+                <div class="col">
+                  {% render_field form2.has_others class="form-control" placeholder="Has_others" %}
+                </div>
+              </div>
+              <br>
+              </div>
           </div>
-          <button type="submit" class="btnSubmit">Take Admission</button>
+          <button type="submit" class="btnSubmit">Submit Application</button>
           <div class="text-center">Already have an account? <a href="studentlogin">Login here</a></div>
+          <div class="text-center"><a href="https://buy.stripe.com/test_28oaEHbdF9mU0OkfYY">Pay</a></div>
+          <!-- <div class="text-center"><a href="https://payments-test.cashfree.com/links/N4vq50br5gk0">Pay with R</a></div> -->
+          <!-- <div class="text-center"></div> -->
+          <!-- <div > <a href="create_order" class="btn btn-primary">Create Order</a> </div>
+          <div > <a href="payment" class="btn btn-primary">Create Order</a> </div>
+          <div > <a href="payment_callback" class="btn btn-primary">Create Order</a> </div>
+          <div > <a href="order_details" class="btn btn-primary">Create Order</a> </div>  -->
         </div>
       </div>
     </div>

@@ -1,7 +1,7 @@
 
 from django.contrib import admin
 from django.urls import path
-from school import views
+from school import views,models
 from django.contrib.auth.views import LoginView,LogoutView
 
 urlpatterns = [
@@ -11,14 +11,17 @@ urlpatterns = [
     path('adminclick', views.adminclick_view),
     path('teacherclick', views.teacherclick_view),
     path('studentclick', views.studentclick_view),
+    path('frenchiseclick', views.frenchiseclick_view),
 
 
     path('adminsignup', views.admin_signup_view),
     path('studentsignup', views.student_signup_view,name='studentsignup'),
     path('teachersignup', views.teacher_signup_view),
+    path('frenchisesignup', views.frenchise_signup_view),
     path('adminlogin', LoginView.as_view(template_name='school/adminlogin.html')),
     path('studentlogin', LoginView.as_view(template_name='school/studentlogin.html')),
     path('teacherlogin', LoginView.as_view(template_name='school/teacherlogin.html')),
+    path('frenchiselogin', LoginView.as_view(template_name='school/frenchiselogin.html')),
 
 
     path('afterlogin', views.afterlogin_view,name='afterlogin'),
@@ -38,6 +41,15 @@ urlpatterns = [
     path('update-teacher/<int:pk>', views.update_teacher_view,name='update-teacher'),
     path('admin-view-teacher-salary', views.admin_view_teacher_salary_view,name='admin-view-teacher-salary'),
 
+    path('admin-frenchise', views.admin_frenchise_view,name='admin-frenchise'),
+    path('admin-view-frenchise', views.admin_view_frenchise_view,name='admin-view-frenchise'),
+    path('admin-add-frenchise', views.admin_add_frenchise_view,name='admin-add-frenchise'),
+    path('admin-approve-frenchise', views.admin_approve_frenchise_view,name='admin-approve-frenchise'),
+    path('approve-frenchise/<int:pk>', views.approve_frenchise_view,name='approve-frenchise'),
+    path('delete-frenchise/<int:pk>', views.delete_frenchise_view,name='delete-frenchise'),
+    path('delete-frenchise-from-school/<int:pk>', views.delete_frenchise_from_school_view,name='delete-frenchise-from-school'),
+    path('update-frenchise/<int:pk>', views.update_frenchise_view,name='update-frenchise'),
+    path('admin-view-frenchise-salary', views.admin_view_frenchise_salary_view,name='admin-view-frenchise-salary'),
 
     path('admin-student', views.admin_student_view,name='admin-student'),
     path('admin-add-student', views.admin_add_student_view,name='admin-add-student'),
@@ -68,12 +80,21 @@ urlpatterns = [
     path('teacher-view-attendance/<str:cl>', views.teacher_view_attendance_view,name='teacher-view-attendance'),
     path('teacher-notice', views.teacher_notice_view,name='teacher-notice'),
 
+    path('frenchise-dashboard', views.frenchise_dashboard_view,name='frenchise-dashboard'),
+    path('frenchise-notice', views.frenchise_notice_view,name='frenchise-notice'),
+
     path('student-dashboard', views.student_dashboard_view,name='student-dashboard'),
     path('student-attendance', views.student_attendance_view,name='student-attendance'),
 
 
-
-
     path('aboutus', views.aboutus_view),
     path('contactus', views.contactus_view),
+
+    path('create_order/', views.create_order, name='create_order'),
+    path('payment', views.create_payment, name='payment'),
+    path('payment/<int:order_id>/', views.create_payment, name='payment'),
+    path('payment_callback/', views.payment_callback, name='payment_callback'),
+    path('order_details/<int:order_id>/', views.order_details, name='order_details'),
+    path('payment_failed/', views.payment_failed, name='payment_failed'),
+    
 ]
